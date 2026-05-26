@@ -4,7 +4,6 @@ import plotly.graph_objects as go
 from dash import Dash, dcc, html
 from collections import Counter
 
-# ========== ЗАГРУЗКА И ОБРАБОТКА ==========
 df = pd.read_csv(r'D:\hsenespr\project_hse_nursing_home\final_table\all_pansionaty_combined.csv', encoding='utf-8-sig')
 
 df['rating'] = pd.to_numeric(df['rating'], errors='coerce')
@@ -33,13 +32,12 @@ df['rating_cat'] = df['rating'].apply(rating_cat)
 
 # Топ услуг
 services = ' | '.join(df[df['services'] != '']['services'].dropna().tolist())
-services_df = pd.DataFrame(Counter([s.strip() for s in services.split('|') if s.strip()]).most_common(15), 
-                          columns=['Услуга', 'Количество'])
+services_df = pd.DataFrame(Counter([s.strip() for s in services.split('|') if s.strip()]).most_common(15), columns=['Услуга', 'Количество'])
 
 # Данные для карты
 map_data = df[df['lat'].notna() & df['lon'].notna()]
 
-# ========== ГРАФИКИ ==========
+# Графики
 fig_rating = go.Figure()
 rating_data = df[df['rating'] > 0]['rating'].dropna()
 fig_rating.add_trace(go.Histogram(x=rating_data, nbinsx=25, marker_color='#2ecc71'))
@@ -53,8 +51,6 @@ fig_reviews = px.scatter(df[df['rating'] > 0], x='reviews', y='rating', color='s
                          hover_data=['name', 'price'])
 fig_reviews.update_layout(height=400, template='plotly_white')
 
-# Ценовые сегменты - ИСПРАВЛЕНО
-# Ценовые сегменты - ИСПРАВЛЕНО
 segment_counts = df['price_segment'].value_counts().reset_index()
 segment_counts.columns = ['segment', 'count']
 fig_price_segments = px.bar(segment_counts, x='segment', y='count', 
@@ -64,7 +60,6 @@ fig_price_segments = px.bar(segment_counts, x='segment', y='count',
                             color_discrete_sequence=['#2ecc71', '#3498db', '#f39c12', '#e74c3c', '#95a5a6'])
 fig_price_segments.update_layout(height=400, template='plotly_white', showlegend=False)
 
-# ОБЩИЙ BOXPLOT (без разделения по источникам)
 fig_price_box = px.box(df[df['price'].notna()], y='price', 
                        title='Boxplot цен (все источники)',
                        labels={'price': 'Цена (руб/день)'},
@@ -89,7 +84,8 @@ fig_services = px.bar(services_df, x='Количество', y='Услуга', o
                        title='Топ-15 услуг', color='Количество', color_continuous_scale='Oranges')
 fig_services.update_layout(height=450, template='plotly_white')
 
-# ========== DASH ==========
+
+
 app = Dash(__name__)
 app.layout = html.Div([
     html.H1("Анализ рынка пансионатов для пожилых", style={'textAlign': 'center', 'padding': '20px'}),
